@@ -145,6 +145,12 @@ Agente executa tarefa → Ação crítica detectada → Humano aprova/rejeita
 - **Req-040:** Detecção automática do idioma do browser
 - **Req-041:** Seletor de idioma persistente (localStorage)
 
+#### Bring Your Own Key (BYOK) & Demonstração Controlada
+- **Req-042:** Modelo BYOK agnóstico para provedores de IA (Google Gemini, OpenAI, Anthropic Claude) sem retenção de segredos no servidor.
+- **Req-043:** Verificação ativa de ping/latência e conectividade antes de persistir chaves.
+- **Req-044:** Ambiente de demonstração permite até duas utilizações gratuitas de degustação no Command Center para novos visitantes.
+- **Req-045:** Bloqueio gracioso com modal rápida (QuickApiKeyModal) ao esgotar a cota de 2 testes, convidando para BYOK ou compra de licença.
+
 ### 5.3 Funcionalidades Futuras (P2)
 
 - Notificações por e-mail e Slack para aprovações pendentes

@@ -1,9 +1,11 @@
-import { MessageSquare, Mic, Send, Paperclip, Sparkles, X, Maximize2, Minimize2, Volume2 } from "lucide-react";
+import { MessageSquare, Mic, Send, Paperclip, Sparkles, X, Maximize2, Minimize2, Volume2, Key, AlertCircle, ShieldCheck, Zap } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { generateStream, generateSpeech, models } from "@/lib/gemini";
 import { logger } from "@/lib/logger";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useAiKeys, AI_PROVIDERS } from "../contexts/AiKeysContext";
+import { QuickApiKeyModal } from "@/components/QuickApiKeyModal";
 import Seo from "@/components/Seo";
 
 interface Message {
@@ -66,8 +68,34 @@ export default function CommandCenter() {
 
   const [isThinkingMode, setIsThinkingMode] = useState(false);
 
+  const { 
+    isByokActive, 
+    activeProvider, 
+    remainingDemoRuns, 
+    maxDemoRuns, 
+    canUseDemo, 
+    consumeDemoRun, 
+    openKeyModal, 
+    isKeyModalOpen, 
+    closeKeyModal 
+  } = useAiKeys();
+
   const handleSendMessage = async () => {
     if (!input.trim()) return;
+
+    // Check BYOK policy and demo limit
+    if (!isByokActive && !canUseDemo) {
+      openKeyModal();
+      return;
+    }
+
+    if (!isByokActive) {
+      const allowed = consumeDemoRun();
+      if (!allowed) {
+        openKeyModal();
+        return;
+      }
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -127,29 +155,70 @@ export default function CommandCenter() {
     <>
       <Seo title={t('commandCenter.title')} description="Central de comando unificada para conversar com seus agentes de IA na VibeFlow." />
       <div className="flex flex-col h-[calc(100vh-8rem)]">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <div>
           <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{t('commandCenter.title')}</h2>
           <p className="text-slate-500 dark:text-slate-400 mt-1">{t('commandCenter.subtitle')}</p>
         </div>
-        <div className="flex items-center gap-3 bg-slate-100 dark:bg-[#261933] px-4 py-2 rounded-xl border border-border-muted dark:border-[#362348]">
-          <span className="text-sm font-bold text-slate-900 dark:text-white">{t('commandCenter.thinkingMode')}</span>
-          <button 
-            onClick={() => setIsThinkingMode(!isThinkingMode)}
-            className={cn(
-              "w-10 h-6 rounded-full relative transition-colors",
-              isThinkingMode ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"
-            )}
-          >
-            <span className={cn(
-              "absolute top-1 size-4 bg-white rounded-full transition-all",
-              isThinkingMode ? "left-5" : "left-1"
-            )} />
-          </button>
+        <div className="flex items-center gap-3">
+          {/* Thinking Mode toggle */}
+          <div className="flex items-center gap-3 bg-slate-100 dark:bg-[#261933] px-3.5 py-2 rounded-xl border border-border-muted dark:border-[#362348]">
+            <span className="text-xs font-bold text-slate-900 dark:text-white">{t('commandCenter.thinkingMode')}</span>
+            <button 
+              onClick={() => setIsThinkingMode(!isThinkingMode)}
+              className={cn(
+                "w-9 h-5 rounded-full relative transition-colors",
+                isThinkingMode ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"
+              )}
+            >
+              <span className={cn(
+                "absolute top-0.5 size-4 bg-white rounded-full transition-all",
+                isThinkingMode ? "left-4" : "left-0.5"
+              )} />
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="flex-1 bg-white dark:bg-[#261933] border border-border-muted dark:border-[#362348] rounded-2xl overflow-hidden flex flex-col relative shadow-2xl">
+        {/* BYOK / Demo Status Bar */}
+        <div className={`px-4 py-2.5 border-b flex items-center justify-between text-xs transition-colors ${
+          isByokActive 
+            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-300"
+            : remainingDemoRuns > 0
+              ? "bg-amber-500/10 border-amber-500/20 text-amber-800 dark:text-amber-200"
+              : "bg-rose-500/10 border-rose-500/20 text-rose-800 dark:text-rose-200"
+        }`}>
+          <div className="flex items-center gap-2">
+            <Key className="size-3.5 shrink-0" />
+            {isByokActive ? (
+              <span className="font-semibold">
+                <strong>BYOK Ativo:</strong> Usando sua chave própria de {AI_PROVIDERS[activeProvider].name} (Privacidade total & Custo Zero).
+              </span>
+            ) : remainingDemoRuns > 0 ? (
+              <span>
+                <strong>Modo Demonstração:</strong> Você tem <strong>{remainingDemoRuns} de {maxDemoRuns}</strong> testes gratuitos restantes.
+              </span>
+            ) : (
+              <span className="font-semibold">
+                <strong>Limite de Demonstração atingido (2/2):</strong> Insira sua chave de API para continuar.
+              </span>
+            )}
+          </div>
+
+          <button
+            onClick={openKeyModal}
+            className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all shrink-0 flex items-center gap-1 ${
+              isByokActive
+                ? "bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-800 dark:text-emerald-200"
+                : "bg-primary text-white hover:opacity-95 shadow-sm shadow-primary/20"
+            }`}
+          >
+            <Key className="size-3" />
+            <span>{isByokActive ? "Gerenciar Chave" : "Inserir Chave (BYOK)"}</span>
+          </button>
+        </div>
+
         {/* Chat Area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
           {messages.map((msg) => (
@@ -248,6 +317,12 @@ export default function CommandCenter() {
         </div>
       </div>
     </div>
+
+    {/* Quick API Key Modal for BYOK and demo limits */}
+    <QuickApiKeyModal 
+      isOpen={isKeyModalOpen} 
+      onClose={closeKeyModal} 
+    />
     </>
   );
 }

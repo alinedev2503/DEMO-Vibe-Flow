@@ -71,6 +71,11 @@ Três níveis de acesso (Admin, Operador, Visualizador) com painel de administra
 ### 🌐 Internacionalização Completa
 Interface em **Português (BR)**, **English (US)** e **Español (ES)** — extensível para qualquer idioma.
 
+### 🔑 Bring Your Own Key (BYOK) & Degustação Controlada
+- **Modelo BYOK:** Cada usuário ou cliente conecta sua própria chave gratuita (Google Gemini via AI Studio, OpenAI ou Claude), garantindo custo zero de LLM para quem revende ou opera o SaaS.
+- **Degustação Controlada para Visitantes:** Visitantes têm até **2 interações gratuitas** no Command Center para validar a interface e a inteligência dos agentes antes de inserir uma chave ou assinar.
+- **Validação ao Vivo:** Teste de ping e latência em tempo real direto pela interface (`QuickApiKeyModal`).
+
 ---
 
 ## 🖥️ Mapa de Rotas

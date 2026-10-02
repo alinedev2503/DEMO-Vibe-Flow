@@ -63,10 +63,20 @@ interface AiKeysContextType {
   keys: Record<AiProvider, string>;
   activeProvider: AiProvider;
   isConfigured: boolean;
+  isByokActive: boolean;
   activeKey: string;
   status: "configured" | "unconfigured" | "error";
   statusMessage: string;
   hasEnvKey: boolean;
+  demoRunsUsed: number;
+  maxDemoRuns: number;
+  remainingDemoRuns: number;
+  canUseDemo: boolean;
+  isKeyModalOpen: boolean;
+  openKeyModal: () => void;
+  closeKeyModal: () => void;
+  consumeDemoRun: () => boolean;
+  resetDemoRuns: () => void;
   setActiveProvider: (provider: AiProvider) => void;
   saveKey: (provider: AiProvider, key: string) => void;
   removeKey: (provider: AiProvider) => void;
@@ -81,6 +91,9 @@ const STORAGE_KEYS: Record<AiProvider, string> = {
   anthropic: "vibeflow_anthropic_api_key",
 };
 
+const DEMO_RUNS_KEY = "vibeflow_demo_runs_count";
+const MAX_DEMO_RUNS = 2;
+
 export function AiKeysProvider({ children }: { children: ReactNode }) {
   const [keys, setKeys] = useState<Record<AiProvider, string>>({
     gemini: "",
@@ -90,6 +103,8 @@ export function AiKeysProvider({ children }: { children: ReactNode }) {
   const [activeProvider, setActiveProviderState] = useState<AiProvider>("gemini");
   const [status, setStatus] = useState<"configured" | "unconfigured" | "error">("unconfigured");
   const [statusMessage, setStatusMessage] = useState<string>("");
+  const [demoRunsUsed, setDemoRunsUsed] = useState<number>(0);
+  const [isKeyModalOpen, setIsKeyModalOpen] = useState<boolean>(false);
 
   const hasEnvKey = Boolean(typeof process !== "undefined" && process.env?.GEMINI_API_KEY);
 
@@ -100,12 +115,17 @@ export function AiKeysProvider({ children }: { children: ReactNode }) {
       const openaiKey = localStorage.getItem(STORAGE_KEYS.openai) || "";
       const anthropicKey = localStorage.getItem(STORAGE_KEYS.anthropic) || "";
       const savedProvider = (localStorage.getItem("vibeflow_active_provider") as AiProvider) || "gemini";
+      const storedRuns = parseInt(localStorage.getItem(DEMO_RUNS_KEY) || "0", 10);
 
       setKeys({
         gemini: geminiKey,
         openai: openaiKey,
         anthropic: anthropicKey,
       });
+
+      if (!isNaN(storedRuns) && storedRuns >= 0) {
+        setDemoRunsUsed(storedRuns);
+      }
 
       if (["gemini", "openai", "anthropic"].includes(savedProvider)) {
         setActiveProviderState(savedProvider);
@@ -132,6 +152,43 @@ export function AiKeysProvider({ children }: { children: ReactNode }) {
     : keys[activeProvider];
 
   const isConfigured = Boolean(activeKey && activeKey.trim().length > 5);
+  // BYOK is considered explicitly active if the user supplied their own key in storage
+  const isByokActive = Boolean(keys[activeProvider] && keys[activeProvider].trim().length > 5);
+
+  const remainingDemoRuns = Math.max(0, MAX_DEMO_RUNS - demoRunsUsed);
+  const canUseDemo = demoRunsUsed < MAX_DEMO_RUNS;
+
+  const openKeyModal = useCallback(() => setIsKeyModalOpen(true), []);
+  const closeKeyModal = useCallback(() => setIsKeyModalOpen(false), []);
+
+  const consumeDemoRun = useCallback((): boolean => {
+    // If user has BYOK active, no need to consume demo run
+    if (isByokActive) return true;
+
+    const currentStored = parseInt(localStorage.getItem(DEMO_RUNS_KEY) || "0", 10);
+    if (currentStored >= MAX_DEMO_RUNS) {
+      setIsKeyModalOpen(true);
+      return false;
+    }
+
+    const nextCount = currentStored + 1;
+    try {
+      localStorage.setItem(DEMO_RUNS_KEY, nextCount.toString());
+    } catch {
+      // ignore
+    }
+    setDemoRunsUsed(nextCount);
+    return true;
+  }, [isByokActive]);
+
+  const resetDemoRuns = useCallback(() => {
+    setDemoRunsUsed(0);
+    try {
+      localStorage.removeItem(DEMO_RUNS_KEY);
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const setActiveProvider = useCallback((provider: AiProvider) => {
     setActiveProviderState(provider);
@@ -289,10 +346,20 @@ export function AiKeysProvider({ children }: { children: ReactNode }) {
         keys,
         activeProvider,
         isConfigured,
+        isByokActive,
         activeKey,
         status,
         statusMessage,
         hasEnvKey,
+        demoRunsUsed,
+        maxDemoRuns: MAX_DEMO_RUNS,
+        remainingDemoRuns,
+        canUseDemo,
+        isKeyModalOpen,
+        openKeyModal,
+        closeKeyModal,
+        consumeDemoRun,
+        resetDemoRuns,
         setActiveProvider,
         saveKey,
         removeKey,

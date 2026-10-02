@@ -255,13 +255,14 @@ const testimonials = [
 ];
 
 const faq = [
+  { q: "Como funciona a utilização de chaves de IA (BYOK)?", a: "O VibeFlow adota o padrão Bring Your Own Key (BYOK). Para demonstração rápida, visitantes têm até 2 interações gratuitas de teste. Para uso contínuo, cada usuário conecta sua própria chave gratuita do Google AI Studio (ou OpenAI/Claude). Seus dados e limites de cota ficam sob seu controle total, e compradores do código não têm custos de tokens com terceiros." },
   { q: "Como eu controlo o que os agentes fazem?", a: "Toda ação classificada como médio, alto ou crítico entra na Approval Queue e aguarda seu OK antes de executar. Você define os limites, os agentes respeitam." },
   { q: "E se um agente cometer um erro? Como rastreio?", a: "Cada ação é registrada no Audit Log imutável — quem, o quê, quando, com qual autorização. Debugar leva segundos, não horas." },
-  { q: "Meus dados ficam seguros?", a: "Banco SQLite embarcado no seu servidor. Nenhum dado sai sem sua autorização explícita. JWT + bcrypt + rate limiting + Helmet por padrão." },
+  { q: "Meus dados ficam seguros?", a: "Banco com adaptador agnóstico (SQLite, Supabase PostgreSQL ou Firebase Firestore). Nenhum dado sai sem sua autorização explícita. JWT + PBKDF2 + rate limiting + Helmet por padrão." },
   { q: "Posso conectar ferramentas que já uso?", a: "Sim. O MCP Gateway conecta Salesforce, HubSpot, PostgreSQL e qualquer API REST. Extensível — adicione novos conectores em minutos." },
-  { q: "Preciso de cartão de crédito para testar?", a: "Não. Plano Starter gratuito, sem compromisso. Só precisa de uma chave de API do Google Gemini (grátis no AI Studio)." },
-  { q: "Posso revender para meus clientes?", a: "Sim — white-label completo no plano Pro e Enterprise. Logo, cores, tipografia, domínio próprio. Seus clientes nunca saberão que é VibeFlow." },
-  { q: "Funciona com qualquer modelo de IA?", a: "Na fase atual, integrado com Google Gemini (Flash, Pro, TTS, Vision). Suporte a outros modelos está no roadmap da Fase 6." },
+  { q: "Preciso de cartão de crédito para testar?", a: "Não. Você pode testar imediatamente na demonstração interativa. Para estender, use uma chave gratuita do Google AI Studio obtida em 30 segundos." },
+  { q: "Posso revender para meus clientes?", a: "Sim — white-label completo disponível na licença comercial. Logo, cores, tipografia, domínio próprio. Seus clientes nunca saberão que é VibeFlow." },
+  { q: "Funciona com qualquer modelo de IA?", a: "Sim! Suporte nativo ao Google Gemini (Flash, Pro, TTS, Visão), OpenAI (GPT-4o) e Anthropic Claude (3.5 Sonnet), com alternância em 1 clique." },
   { q: "Como é o suporte?", a: "Starter: comunidade Discord. Pro: ticket com resposta em 24h. Enterprise: gerente de conta dedicado + SLA 99.9%." },
 ];
 
